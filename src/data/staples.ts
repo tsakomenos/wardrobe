@@ -1,0 +1,65 @@
+import type { WardrobeKind } from '../types'
+
+/** Timeless pieces the shopping advisor can propose. */
+export interface Staple {
+  subtype: string
+  color: string // palette name
+  kind: WardrobeKind
+  why: string
+}
+
+export const STAPLES: Staple[] = [
+  { subtype: 'tshirt', color: 'White', kind: 'any', why: 'The most versatile top there is.' },
+  { subtype: 'tshirt', color: 'Black', kind: 'any', why: 'Evening-friendly basic.' },
+  { subtype: 'shirt', color: 'White', kind: 'any', why: 'Dresses up or down with anything.' },
+  { subtype: 'shirt', color: 'Light blue', kind: 'any', why: 'Softer than white, works with every neutral.' },
+  { subtype: 'dress_shirt', color: 'White', kind: 'any', why: 'Needed for interviews, weddings and formal dinners.' },
+  { subtype: 'polo', color: 'Navy', kind: 'any', why: 'Smart-casual summer top.' },
+  { subtype: 'linen_shirt', color: 'Sand', kind: 'any', why: 'Beach and summer evenings.' },
+  { subtype: 'sweater', color: 'Grey', kind: 'any', why: 'Layers over shirts, goes with every bottom.' },
+  { subtype: 'sweater', color: 'Navy', kind: 'any', why: 'Smart knit for office and dinners.' },
+  { subtype: 'sweater', color: 'Burgundy', kind: 'any', why: 'A rich accent colour that still reads as smart.' },
+  { subtype: 'turtleneck', color: 'Black', kind: 'any', why: 'Minimal and elegant under a blazer or coat.' },
+  { subtype: 'hoodie', color: 'Grey', kind: 'any', why: 'Casual layering piece.' },
+  { subtype: 'blouse', color: 'White', kind: 'w', why: 'Office and dinner essential.' },
+  { subtype: 'jeans', color: 'Dark denim', kind: 'any', why: 'Dark denim passes as smart casual.' },
+  { subtype: 'jeans', color: 'Light denim', kind: 'any', why: 'Relaxed weekend option.' },
+  { subtype: 'chinos', color: 'Beige', kind: 'any', why: 'Bridges casual and office.' },
+  { subtype: 'chinos', color: 'Olive', kind: 'any', why: 'An earthy alternative to beige.' },
+  { subtype: 'chinos', color: 'Navy', kind: 'any', why: 'Smart without being formal.' },
+  { subtype: 'trousers', color: 'Grey', kind: 'any', why: 'Grey trousers pair with navy, black and brown.' },
+  { subtype: 'trousers', color: 'Navy', kind: 'any', why: 'Core of a business wardrobe.' },
+  { subtype: 'trousers', color: 'Black', kind: 'any', why: 'Evening and formal events.' },
+  { subtype: 'shorts', color: 'Beige', kind: 'any', why: 'Summer basic.' },
+  { subtype: 'joggers', color: 'Black', kind: 'any', why: 'Gym and travel days.' },
+  { subtype: 'skirt', color: 'Black', kind: 'w', why: 'Goes with every top you own.' },
+  { subtype: 'pencil_skirt', color: 'Navy', kind: 'w', why: 'Office staple.' },
+  { subtype: 'blazer', color: 'Navy', kind: 'any', why: 'The single most useful jacket: office, dinner, wedding.' },
+  { subtype: 'blazer', color: 'Charcoal', kind: 'any', why: 'A second blazer for formal days.' },
+  { subtype: 'denim_jacket', color: 'Denim', kind: 'any', why: 'Casual layer for spring and autumn.' },
+  { subtype: 'leather_jacket', color: 'Black', kind: 'any', why: 'Edge for nights out.' },
+  { subtype: 'overcoat', color: 'Navy', kind: 'any', why: 'Winter coat that works over a suit or jeans.' },
+  { subtype: 'overcoat', color: 'Camel', kind: 'any', why: 'Elegant winter coat, especially with navy and grey.' },
+  { subtype: 'trench', color: 'Beige', kind: 'any', why: 'Spring and autumn smart layer.' },
+  { subtype: 'puffer', color: 'Black', kind: 'any', why: 'Warm casual winter layer.' },
+  { subtype: 'suit', color: 'Navy', kind: 'any', why: 'Weddings, interviews and formal dinners.' },
+  { subtype: 'midi_dress', color: 'Black', kind: 'w', why: 'The little black dress: dinner, date, party.' },
+  { subtype: 'cocktail_dress', color: 'Burgundy', kind: 'w', why: 'Weddings and formal events.' },
+  { subtype: 'sneakers', color: 'White', kind: 'any', why: 'White sneakers go with everything casual and smart-casual.' },
+  { subtype: 'running', color: 'Black', kind: 'any', why: 'For sport.' },
+  { subtype: 'loafers', color: 'Brown', kind: 'any', why: 'Smart shoes for chinos, jeans and trousers.' },
+  { subtype: 'chelsea', color: 'Dark brown', kind: 'any', why: 'Autumn and winter smart boots.' },
+  { subtype: 'dress_shoes', color: 'Black', kind: 'any', why: 'Required for formal events and interviews.' },
+  { subtype: 'dress_shoes', color: 'Dark brown', kind: 'any', why: 'Business shoes that pair with navy and grey.' },
+  { subtype: 'heels', color: 'Black', kind: 'w', why: 'Evening and formal.' },
+  { subtype: 'flats', color: 'Tan', kind: 'w', why: 'Comfortable daytime smart option.' },
+  { subtype: 'sandals', color: 'Tan', kind: 'any', why: 'Beach and summer.' },
+  { subtype: 'belt', color: 'Black', kind: 'any', why: 'Must match your black shoes.' },
+  { subtype: 'belt', color: 'Brown', kind: 'any', why: 'Must match your brown shoes.' },
+  { subtype: 'watch', color: 'Charcoal', kind: 'any', why: 'A watch finishes almost any outfit.' },
+  { subtype: 'tie', color: 'Navy', kind: 'm', why: 'Interviews and weddings.' },
+  { subtype: 'scarf', color: 'Grey', kind: 'any', why: 'Winter layer that softens a coat.' },
+  { subtype: 'sunglasses', color: 'Black', kind: 'any', why: 'Summer, brunch and beach.' },
+  { subtype: 'bag', color: 'Black', kind: 'any', why: 'Work and travel.' },
+  { subtype: 'jewellery', color: 'Tan', kind: 'w', why: 'Gold-tone jewellery lifts evening looks.' },
+]
