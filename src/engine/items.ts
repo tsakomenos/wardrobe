@@ -1,6 +1,7 @@
 import type { ClothingItem } from '../types'
 import { SUBTYPE_MAP } from '../data/subtypes'
 import { nearestPaletteName } from './color'
+import { pieceLabel } from '../labels'
 
 export function newId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
@@ -28,10 +29,6 @@ export function makeItem(partial: Partial<ClothingItem> & { subtype: string; col
 }
 
 export function itemTitle(item: ClothingItem): string {
-  const label = (SUBTYPE_MAP[item.subtype]?.label ?? item.subtype).toLowerCase()
   if (item.name) return item.name
-  const colour = item.colorName
-  // "Denim jacket" already says denim; "Light denim jeans" is fine
-  if (label.startsWith(colour.toLowerCase() + ' ')) return colour.charAt(0).toUpperCase() + colour.slice(1) + label.slice(colour.length)
-  return `${colour} ${label}`
+  return pieceLabel(item.subtype, item.colorName)
 }

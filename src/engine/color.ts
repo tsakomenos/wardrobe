@@ -1,4 +1,5 @@
 import { PALETTE } from '../data/palette'
+import { t } from '../i18n'
 
 export type ColorKind =
   | 'white'
@@ -98,22 +99,22 @@ export function pairScore(a: ColorInfo, b: ColorInfo): PairResult {
 
   // Neutral with neutral
   if (a.neutral && b.neutral) {
-    if (has('black') && has('navy')) return { score: -0.2, warning: 'Black and navy sit awkwardly together unless the contrast is obvious' }
-    if (a.kind === b.kind) return { score: 0.8, note: 'Tonal neutrals' }
-    if (has('white') && has('black')) return { score: 1.1, note: 'Black and white: crisp contrast' }
+    if (has('black') && has('navy')) return { score: -0.2, warning: t('c.blackNavy') }
+    if (a.kind === b.kind) return { score: 0.8, note: t('c.tonalNeutral') }
+    if (has('white') && has('black')) return { score: 1.1, note: t('c.blackWhite') }
     return { score: 1 }
   }
 
   // Earth tones
-  if (both('earth')) return { score: 0.9, note: 'Tonal earth tones' }
+  if (both('earth')) return { score: 0.9, note: t('c.tonalEarth') }
   if (has('earth')) {
     const other = a.kind === 'earth' ? b : a
-    if (other.kind === 'black') return { score: -0.3, warning: 'Brown and black fight each other' }
-    if (other.kind === 'navy') return { score: 1.3, note: 'Navy and camel/brown: a classic pairing' }
+    if (other.kind === 'black') return { score: -0.3, warning: t('c.brownBlack') }
+    if (other.kind === 'navy') return { score: 1.3, note: t('c.navyCamel') }
     if (other.kind === 'white' || other.kind === 'grey') return { score: 1 }
-    if (other.kind === 'denim') return { score: 1.2, note: 'Denim with earth tones feels relaxed and warm' }
-    if (other.kind === 'olive') return { score: 1, note: 'Olive and earth tones belong together' }
-    if (other.temp === 'warm') return { score: 0.9, note: 'Warm colour on a warm earthy base' }
+    if (other.kind === 'denim') return { score: 1.2, note: t('c.denimEarth') }
+    if (other.kind === 'olive') return { score: 1, note: t('c.oliveEarth') }
+    if (other.temp === 'warm') return { score: 0.9, note: t('c.warmOnEarth') }
     if (other.kind === 'pastel') return { score: 0.7 }
     return { score: 0.4 }
   }
@@ -122,10 +123,10 @@ export function pairScore(a: ColorInfo, b: ColorInfo): PairResult {
   if (both('olive')) return { score: 0.7 }
   if (has('olive')) {
     const other = a.kind === 'olive' ? b : a
-    if (other.neutral) return { score: 1, note: other.kind === 'white' ? 'Olive and white: fresh' : undefined }
+    if (other.neutral) return { score: 1, note: other.kind === 'white' ? t('c.oliveWhite') : undefined }
     if (other.kind === 'pastel') return { score: 0.6 }
     const d = hueDistance(75, other.h)
-    if (d > 150) return { score: 0.9, note: 'Olive with a red/burgundy accent works' }
+    if (d > 150) return { score: 0.9, note: t('c.oliveRed') }
     if (d < 40) return { score: 0.3 }
     return { score: 0.1 }
   }
@@ -134,23 +135,23 @@ export function pairScore(a: ColorInfo, b: ColorInfo): PairResult {
   if (a.neutral || b.neutral) {
     const n = a.neutral ? a : b
     const c = a.neutral ? b : a
-    if (n.kind === 'white') return { score: 1.2, note: 'White makes the colour pop' }
-    if (n.kind === 'black') return { score: 1.1, note: 'Black grounds the colour' }
+    if (n.kind === 'white') return { score: 1.2, note: t('c.whitePop') }
+    if (n.kind === 'black') return { score: 1.1, note: t('c.blackGrounds') }
     if (n.kind === 'navy') {
-      if (c.kind === 'pastel') return { score: 1.2, note: 'Navy and a pale shade: easy and polished' }
-      if (c.temp === 'warm') return { score: 1.1, note: 'Navy with a warm accent' }
+      if (c.kind === 'pastel') return { score: 1.2, note: t('c.navyPale') }
+      if (c.temp === 'warm') return { score: 1.1, note: t('c.navyWarm') }
       return { score: 0.8 }
     }
-    if (n.kind === 'grey') return { score: 1.1, note: 'Grey is a quiet base for colour' }
+    if (n.kind === 'grey') return { score: 1.1, note: t('c.greyBase') }
     if (n.kind === 'denim') return { score: 1.0 }
     return { score: 0.9 }
   }
 
   // Pastels
-  if (both('pastel')) return { score: 0.8, note: 'Soft pastels together' }
+  if (both('pastel')) return { score: 0.8, note: t('c.pastels') }
   if (has('pastel')) {
     const d = hueDistance(a.h, b.h)
-    if (d <= 40) return { score: 0.8, note: 'Tonal shades of one colour' }
+    if (d <= 40) return { score: 0.8, note: t('c.tonalShades') }
     if (d >= 150) return { score: 0.7 }
     return { score: 0.2 }
   }
@@ -158,16 +159,16 @@ export function pairScore(a: ColorInfo, b: ColorInfo): PairResult {
   // Colour with colour
   const d = hueDistance(a.h, b.h)
   if (d <= 20) {
-    if (Math.abs(a.l - b.l) < 0.12) return { score: 0.3, warning: 'Two near-identical shades: vary the depth' }
-    return { score: 0.9, note: 'Monochrome: same colour, different depth' }
+    if (Math.abs(a.l - b.l) < 0.12) return { score: 0.3, warning: t('c.tooSimilar') }
+    return { score: 0.9, note: t('c.monochrome') }
   }
-  if (d <= 60) return { score: 0.8, note: 'Analogous colours' }
+  if (d <= 60) return { score: 0.8, note: t('c.analogous') }
   if (d >= 150) {
-    if (a.saturated && b.saturated) return { score: 0.2, warning: 'Bold complementary pair: tone one of them down' }
-    return { score: 1.0, note: 'Complementary colours, one of them muted' }
+    if (a.saturated && b.saturated) return { score: 0.2, warning: t('c.boldComplementary') }
+    return { score: 1.0, note: t('c.complementary') }
   }
-  if (a.saturated && b.saturated) return { score: -1.3, warning: 'These two colours clash' }
-  return { score: -0.4, warning: 'These colours do not quite agree' }
+  if (a.saturated && b.saturated) return { score: -1.3, warning: t('c.clash') }
+  return { score: -0.4, warning: t('c.disagree') }
 }
 
 export function nearestPaletteName(hex: string): string {

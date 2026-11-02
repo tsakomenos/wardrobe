@@ -5,7 +5,9 @@ import { SUBTYPE_MAP } from '../data/subtypes'
 import { paletteByName } from '../data/palette'
 import { describe } from './color'
 import { generateOutfits, goodCombos } from './outfit'
-import { makeItem } from './items'
+import { itemTitle, makeItem } from './items'
+import { t } from '../i18n'
+import { colourLabel, lowerFirst, occasionLabel, pieceLabel, stapleWhy } from '../labels'
 
 export interface Suggestion {
   id: string
@@ -102,16 +104,15 @@ export function suggestPurchases(closet: ClothingItem[], season: Season, kind: W
     }
     if (impact === 0) continue
     unlocks.sort((a, b) => Number(b.fromZero) - Number(a.fromZero) || b.count - a.count)
-    const def = SUBTYPE_MAP[s.subtype]
     const fromZero = unlocks.filter((u) => u.fromZero)
     const reasons: string[] = []
-    if (fromZero.length) reasons.push(`Makes ${fromZero.map((u) => u.occasion.label.toLowerCase()).join(', ')} possible for the first time`)
-    else reasons.push(`Adds ${unlocks.reduce((a, u) => a + u.count, 0)} good combinations across ${unlocks.length} occasion${unlocks.length === 1 ? '' : 's'}`)
+    if (fromZero.length) reasons.push(t('shop.unlock.first', { list: fromZero.map((u) => occasionLabel(u.occasion).toLowerCase()).join(', ') }))
+    else reasons.push(t('shop.unlock.adds', { n: unlocks.reduce((a, u) => a + u.count, 0), k: unlocks.length }))
     suggestions.push({
       id: item.id,
       item,
-      label: `${s.color} ${def.label.toLowerCase()}`,
-      why: s.why,
+      label: pieceLabel(s.subtype, s.color),
+      why: stapleWhy(s),
       reasons,
       impact,
       unlocks,
@@ -140,9 +141,9 @@ export function suggestPurchases(closet: ClothingItem[], season: Season, kind: W
     suggestions.push({
       id,
       item: makeItem({ subtype: 'belt', colorHex: pc.hex, colorName: pc.name, id }),
-      label: `${colorName} belt`,
-      why: `Your ${shoe.colorName.toLowerCase()} ${SUBTYPE_MAP[shoe.subtype].label.toLowerCase()} need a belt in the same leather colour.`,
-      reasons: ['Belt and shoes should match'],
+      label: t('shop.rule.belt.label', { colour: colourLabel(colorName), colourLower: colourLabel(colorName).toLowerCase() }),
+      why: t('shop.rule.belt.why', { shoe: lowerFirst(itemTitle(shoe)) }),
+      reasons: [t('shop.rule.belt.reason')],
       impact: 14,
       unlocks: [],
       alreadyOwned: false,
@@ -154,9 +155,9 @@ export function suggestPurchases(closet: ClothingItem[], season: Season, kind: W
     suggestions.push({
       id: 'rule:watch',
       item: makeItem({ subtype: 'watch', colorHex: pc.hex, colorName: pc.name, id: 'rule:watch' }),
-      label: 'A watch',
-      why: 'A simple watch finishes almost every outfit from office to dinner.',
-      reasons: ['You have no watch'],
+      label: t('shop.rule.watch.label'),
+      why: t('shop.rule.watch.why'),
+      reasons: [t('shop.rule.watch.reason')],
       impact: 10,
       unlocks: [],
       alreadyOwned: false,
@@ -168,9 +169,9 @@ export function suggestPurchases(closet: ClothingItem[], season: Season, kind: W
     suggestions.push({
       id: 'rule:tie',
       item: makeItem({ subtype: 'tie', colorHex: pc.hex, colorName: pc.name, id: 'rule:tie' }),
-      label: 'Navy tie',
-      why: 'You own formal pieces but no tie for interviews and weddings.',
-      reasons: ['Completes your formal pieces'],
+      label: t('shop.rule.tie.label'),
+      why: t('shop.rule.tie.why'),
+      reasons: [t('shop.rule.tie.reason')],
       impact: 9,
       unlocks: [],
       alreadyOwned: false,
@@ -195,10 +196,10 @@ export function gapForOccasion(closet: ClothingItem[], occ: Occasion, season: Se
   const gaps: string[] = []
   const hasBase = (have('top') && have('bottom')) || have('onepiece')
   if (!hasBase) {
-    if (!have('top')) gaps.push('a top at the right formality')
-    if (!have('bottom')) gaps.push('a bottom at the right formality')
+    if (!have('top')) gaps.push(t('gap.top'))
+    if (!have('bottom')) gaps.push(t('gap.bottom'))
   }
-  if (!have('shoes')) gaps.push('shoes at the right formality')
-  if (occ.outer === 'encouraged' && !have('outer') && season !== 'summer') gaps.push('a jacket or coat')
+  if (!have('shoes')) gaps.push(t('gap.shoes'))
+  if (occ.outer === 'encouraged' && !have('outer') && season !== 'summer') gaps.push(t('gap.outer'))
   return gaps
 }

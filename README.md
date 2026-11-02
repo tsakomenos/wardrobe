@@ -2,6 +2,7 @@
 
 A personal web app that keeps a digital closet and builds colour-matched outfits for any occasion.
 Everything runs in the browser and is saved to `localStorage`; there is no backend or account.
+The interface is in Greek by default, with an EN/ΕΛ toggle in the header (all strings live in `src/i18n.ts`).
 
 ## Run it
 

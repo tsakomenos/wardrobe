@@ -1,10 +1,12 @@
 import { useMemo, useRef, useState } from 'react'
 import type { Category, ClothingItem } from '../types'
-import { CATEGORIES, CATEGORY_LABEL } from '../types'
+import { CATEGORIES } from '../types'
 import { ItemCard } from './ItemCard'
 import { ItemForm } from './ItemForm'
 import { sampleCloset } from '../data/sample'
 import { exportCloset, parseClosetImport } from '../hooks/useCloset'
+import { t } from '../i18n'
+import { categoryLabel } from '../labels'
 
 interface Props {
   items: ClothingItem[]
@@ -43,11 +45,11 @@ export function ClosetView({ items, onAdd, onUpdate, onRemove, onReplaceAll }: P
     try {
       const imported = parseClosetImport(await file.text())
       if (!imported.length) throw new Error('empty')
-      if (items.length === 0 || confirm(`Replace your ${items.length} items with the ${imported.length} imported ones?`)) {
+      if (items.length === 0 || confirm(t('closet.confirm.import', { n: items.length, m: imported.length }))) {
         onReplaceAll(imported)
       }
     } catch {
-      alert('Could not read that file. Export a closet from this app to see the format.')
+      alert(t('closet.import.error'))
     }
     setMenuOpen(false)
   }
@@ -57,42 +59,42 @@ export function ClosetView({ items, onAdd, onUpdate, onRemove, onReplaceAll }: P
       <div className="toolbar">
         <div className="chips scroll">
           <button className={`chip ${filter === 'all' ? 'on' : ''}`} onClick={() => setFilter('all')}>
-            All <span className="count">{items.length}</span>
+            {t('closet.all')} <span className="count">{items.length}</span>
           </button>
           {CATEGORIES.map((c) => (
             <button key={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => setFilter(c)}>
-              {CATEGORY_LABEL[c]} <span className="count">{counts[c] ?? 0}</span>
+              {categoryLabel(c)} <span className="count">{counts[c] ?? 0}</span>
             </button>
           ))}
         </div>
         <div className="toolbar-actions">
           <button className="btn primary" onClick={() => setAdding(true)}>
-            + Add item
+            {t('closet.add')}
           </button>
           <div className="menu-wrap">
-            <button className="btn" onClick={() => setMenuOpen((o) => !o)} aria-label="More">
+            <button className="btn" onClick={() => setMenuOpen((o) => !o)} aria-label={t('closet.more')}>
               ⋯
             </button>
             {menuOpen && (
               <div className="menu" onMouseLeave={() => setMenuOpen(false)}>
                 <button
                   onClick={() => {
-                    if (items.length === 0 || confirm('Replace your closet with the example closet?')) onReplaceAll(sampleCloset())
+                    if (items.length === 0 || confirm(t('closet.confirm.sample'))) onReplaceAll(sampleCloset())
                     setMenuOpen(false)
                   }}
                 >
-                  Load example closet
+                  {t('closet.menu.sample')}
                 </button>
-                <button onClick={doExport}>Export JSON</button>
-                <button onClick={() => fileRef.current?.click()}>Import JSON</button>
+                <button onClick={doExport}>{t('closet.menu.export')}</button>
+                <button onClick={() => fileRef.current?.click()}>{t('closet.menu.import')}</button>
                 <button
                   className="danger"
                   onClick={() => {
-                    if (confirm('Delete every item in your closet?')) onReplaceAll([])
+                    if (confirm(t('closet.confirm.clear'))) onReplaceAll([])
                     setMenuOpen(false)
                   }}
                 >
-                  Clear closet
+                  {t('closet.menu.clear')}
                 </button>
               </div>
             )}
@@ -113,20 +115,20 @@ export function ClosetView({ items, onAdd, onUpdate, onRemove, onReplaceAll }: P
 
       {items.length === 0 ? (
         <div className="empty">
-          <h2>Your closet is empty</h2>
-          <p>Add each piece you own with its colour and type. The app will then build outfits for any occasion and tell you what is missing.</p>
+          <h2>{t('closet.empty.title')}</h2>
+          <p>{t('closet.empty.body')}</p>
           <div className="row center">
             <button className="btn primary" onClick={() => setAdding(true)}>
-              Add your first item
+              {t('closet.empty.add')}
             </button>
             <button className="btn" onClick={() => onReplaceAll(sampleCloset())}>
-              Try the example closet
+              {t('closet.empty.sample')}
             </button>
           </div>
         </div>
       ) : visible.length === 0 ? (
         <div className="empty">
-          <p>Nothing in this category yet.</p>
+          <p>{t('closet.empty.category')}</p>
         </div>
       ) : (
         <div className="item-grid">

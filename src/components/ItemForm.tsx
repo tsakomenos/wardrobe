@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import type { Category, ClothingItem, Pattern, StyleTag, Warmth } from '../types'
-import { ALL_STYLES, CATEGORIES, CATEGORY_LABEL, PATTERN_LABEL, STYLE_LABEL } from '../types'
+import { ALL_STYLES, CATEGORIES } from '../types'
 import { SUBTYPES, SUBTYPE_MAP } from '../data/subtypes'
 import { PALETTE } from '../data/palette'
 import { makeItem } from '../engine/items'
 import { nearestPaletteName } from '../engine/color'
+import { t } from '../i18n'
+import { categoryLabel, colourLabel, formalityLabel, patternLabel, styleLabel, subtypeLabel, warmthLabel } from '../labels'
 import { Swatch } from './Swatch'
 
 interface Props {
@@ -14,7 +16,8 @@ interface Props {
   onClose: () => void
 }
 
-const WARMTH_LABEL: Record<Warmth, string> = { light: 'Light / summer', mid: 'All-year', warm: 'Warm / winter' }
+const PATTERNS: Pattern[] = ['solid', 'stripes', 'checks', 'print', 'texture']
+const WARMTHS: Warmth[] = ['light', 'mid', 'warm']
 
 export function ItemForm({ initial, onSave, onDelete, onClose }: Props) {
   const [category, setCategory] = useState<Category>(initial?.category ?? 'top')
@@ -31,14 +34,12 @@ export function ItemForm({ initial, onSave, onDelete, onClose }: Props) {
 
   const subtypesFor = SUBTYPES.filter((s) => s.category === category)
 
-  // Changing the category picks the first matching subtype
   function changeCategory(c: Category) {
     setCategory(c)
     const first = SUBTYPES.find((s) => s.category === c)
     if (first) changeSubtype(first.key)
   }
 
-  // Changing the subtype pulls sensible defaults
   function changeSubtype(key: string) {
     setSubtype(key)
     const def = SUBTYPE_MAP[key]
@@ -96,30 +97,30 @@ export function ItemForm({ initial, onSave, onDelete, onClose }: Props) {
     <div className="modal-backdrop" onClick={onClose}>
       <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
         <header className="modal-head">
-          <h2>{initial ? 'Edit item' : 'Add to closet'}</h2>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
+          <h2>{initial ? t('form.edit') : t('form.add')}</h2>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label={t('form.close')}>
             ×
           </button>
         </header>
 
         <div className="modal-body">
-          <label className="field">
-            <span>Category</span>
+          <div className="field">
+            <span>{t('form.category')}</span>
             <div className="seg">
               {CATEGORIES.map((c) => (
                 <button key={c} type="button" className={c === category ? 'on' : ''} onClick={() => changeCategory(c)}>
-                  {CATEGORY_LABEL[c]}
+                  {categoryLabel(c)}
                 </button>
               ))}
             </div>
-          </label>
+          </div>
 
           <label className="field">
-            <span>Type</span>
+            <span>{t('form.type')}</span>
             <select value={subtype} onChange={(e) => changeSubtype(e.target.value)}>
               {subtypesFor.map((s) => (
                 <option key={s.key} value={s.key}>
-                  {s.label}
+                  {subtypeLabel(s.key)}
                 </option>
               ))}
             </select>
@@ -127,7 +128,7 @@ export function ItemForm({ initial, onSave, onDelete, onClose }: Props) {
 
           <div className="field">
             <span>
-              Colour: <strong>{colorName}</strong>
+              {t('form.colour')}: <strong>{colourLabel(colorName)}</strong>
               <Swatch hex={colorHex} pattern={pattern} size={18} className="inline-swatch" />
             </span>
             <div className="palette">
@@ -137,41 +138,35 @@ export function ItemForm({ initial, onSave, onDelete, onClose }: Props) {
                   type="button"
                   className={`pal ${p.hex === colorHex ? 'on' : ''}`}
                   style={{ backgroundColor: p.hex }}
-                  title={p.name}
-                  aria-label={p.name}
+                  title={colourLabel(p.name)}
+                  aria-label={colourLabel(p.name)}
                   onClick={() => pickPalette(p.hex, p.name)}
                 />
               ))}
             </div>
             <div className="row">
-              <input type="color" value={colorHex} onChange={(e) => pickCustom(e.target.value)} aria-label="Custom colour" />
-              <input
-                type="text"
-                placeholder="#hex (custom)"
-                value={customHex}
-                onChange={(e) => pickCustom(e.target.value)}
-                className="hex-input"
-              />
+              <input type="color" value={colorHex} onChange={(e) => pickCustom(e.target.value)} aria-label={t('form.custom')} />
+              <input type="text" placeholder={t('form.hex')} value={customHex} onChange={(e) => pickCustom(e.target.value)} className="hex-input" />
             </div>
           </div>
 
           <div className="grid2">
             <label className="field">
-              <span>Pattern</span>
+              <span>{t('form.pattern')}</span>
               <select value={pattern} onChange={(e) => setPattern(e.target.value as Pattern)}>
-                {(Object.keys(PATTERN_LABEL) as Pattern[]).map((p) => (
+                {PATTERNS.map((p) => (
                   <option key={p} value={p}>
-                    {PATTERN_LABEL[p]}
+                    {patternLabel(p)}
                   </option>
                 ))}
               </select>
             </label>
             <label className="field">
-              <span>Season</span>
+              <span>{t('form.season')}</span>
               <select value={warmth} onChange={(e) => setWarmth(e.target.value as Warmth)}>
-                {(Object.keys(WARMTH_LABEL) as Warmth[]).map((w) => (
+                {WARMTHS.map((w) => (
                   <option key={w} value={w}>
-                    {WARMTH_LABEL[w]}
+                    {warmthLabel(w)}
                   </option>
                 ))}
               </select>
@@ -180,45 +175,45 @@ export function ItemForm({ initial, onSave, onDelete, onClose }: Props) {
 
           <label className="field">
             <span>
-              Formality: <strong>{['', 'Very casual', 'Casual', 'Smart casual', 'Business / dressy', 'Formal'][formality]}</strong>
+              {t('form.formality')}: <strong>{formalityLabel(formality)}</strong>
             </span>
             <input type="range" min={1} max={5} step={1} value={formality} onChange={(e) => setFormality(Number(e.target.value))} />
           </label>
 
           <div className="field">
-            <span>Style</span>
+            <span>{t('form.style')}</span>
             <div className="chips">
               {ALL_STYLES.map((s) => (
                 <button key={s} type="button" className={`chip ${styles.includes(s) ? 'on' : ''}`} onClick={() => toggleStyle(s)}>
-                  {STYLE_LABEL[s]}
+                  {styleLabel(s)}
                 </button>
               ))}
             </div>
           </div>
 
           <label className="field">
-            <span>Name (optional)</span>
-            <input type="text" value={name} placeholder="e.g. Levi's 501, Zara blazer" onChange={(e) => setName(e.target.value)} />
+            <span>{t('form.name')}</span>
+            <input type="text" value={name} placeholder={t('form.name.placeholder')} onChange={(e) => setName(e.target.value)} />
           </label>
 
           <label className="check">
             <input type="checkbox" checked={favorite} onChange={(e) => setFavorite(e.target.checked)} />
-            <span>Favourite (gets a small boost in suggestions)</span>
+            <span>{t('form.favorite')}</span>
           </label>
         </div>
 
         <footer className="modal-foot">
           {initial && onDelete && (
             <button type="button" className="btn danger" onClick={() => onDelete(initial.id)}>
-              Delete
+              {t('form.delete')}
             </button>
           )}
           <span className="spacer" />
           <button type="button" className="btn" onClick={onClose}>
-            Cancel
+            {t('form.cancel')}
           </button>
           <button type="submit" className="btn primary">
-            {initial ? 'Save' : 'Add'}
+            {initial ? t('form.save') : t('form.submit')}
           </button>
         </footer>
       </form>

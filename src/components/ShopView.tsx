@@ -1,22 +1,24 @@
 import { useEffect, useState } from 'react'
 import type { ClothingItem, Season, WardrobeKind } from '../types'
-import { SEASON_LABEL } from '../types'
 import { coverage, suggestPurchases, type OccasionCoverage, type Suggestion } from '../engine/shopping'
+import { itemTitle, newId } from '../engine/items'
+import { t, type Lang } from '../i18n'
+import { occasionLabel, seasonLabel } from '../labels'
 import { OutfitCard } from './OutfitCard'
 import { Swatch } from './Swatch'
-import { itemTitle, newId } from '../engine/items'
 
 interface Props {
   items: ClothingItem[]
   season: Season
+  lang: Lang
   wardrobeKind: WardrobeKind
   onWardrobeKind: (k: WardrobeKind) => void
   onAddToCloset: (item: ClothingItem) => void
 }
 
-const KIND_LABEL: Record<WardrobeKind, string> = { any: 'Everything', m: 'Menswear', w: 'Womenswear' }
+const KINDS: WardrobeKind[] = ['any', 'm', 'w']
 
-export function ShopView({ items, season, wardrobeKind, onWardrobeKind, onAddToCloset }: Props) {
+export function ShopView({ items, season, lang, wardrobeKind, onWardrobeKind, onAddToCloset }: Props) {
   const [result, setResult] = useState<{ suggestions: Suggestion[]; cov: OccasionCoverage[] } | null>(null)
   const [busy, setBusy] = useState(false)
   const [added, setAdded] = useState<Set<string>>(new Set())
@@ -25,7 +27,7 @@ export function ShopView({ items, season, wardrobeKind, onWardrobeKind, onAddToC
     let cancelled = false
     setBusy(true)
     // Let the UI paint before the heavier analysis runs
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       const cov = coverage(items, season)
       const suggestions = suggestPurchases(items, season, wardrobeKind)
       if (!cancelled) {
@@ -35,14 +37,14 @@ export function ShopView({ items, season, wardrobeKind, onWardrobeKind, onAddToC
     }, 20)
     return () => {
       cancelled = true
-      clearTimeout(t)
+      clearTimeout(timer)
     }
-  }, [items, season, wardrobeKind])
+  }, [items, season, wardrobeKind, lang])
 
   if (items.length === 0) {
     return (
       <div className="empty">
-        <p>Add your clothes first, then the advisor can tell you what is missing.</p>
+        <p>{t('shop.empty')}</p>
       </div>
     )
   }
@@ -53,45 +55,48 @@ export function ShopView({ items, season, wardrobeKind, onWardrobeKind, onAddToC
     <section>
       <div className="toolbar">
         <div className="seg small">
-          {(Object.keys(KIND_LABEL) as WardrobeKind[]).map((k) => (
+          {KINDS.map((k) => (
             <button key={k} className={k === wardrobeKind ? 'on' : ''} onClick={() => onWardrobeKind(k)}>
-              {KIND_LABEL[k]}
+              {t(`shop.kind.${k}`)}
             </button>
           ))}
         </div>
-        <p className="tip">Suggestions are computed for {SEASON_LABEL[season].toLowerCase()} (change the season on the Outfits tab).</p>
+        <p className="tip">{t('shop.computedFor', { season: seasonLabel(season).toLowerCase() })}</p>
       </div>
 
       {busy || !result ? (
         <div className="empty">
-          <p>Analysing your closet…</p>
+          <p>{t('shop.analysing')}</p>
         </div>
       ) : (
         <>
-          <h2 className="section-title">How well your closet covers each occasion</h2>
+          <h2 className="section-title">{t('shop.coverage')}</h2>
           <div className="coverage">
             {result.cov.map((c) => (
               <div key={c.occasion.id} className="cov-row">
                 <span className="cov-label">
-                  {c.occasion.emoji} {c.occasion.label}
+                  {c.occasion.emoji} {occasionLabel(c.occasion)}
                 </span>
                 <span className="cov-bar">
-                  <span className={`cov-fill ${c.good === 0 ? 'zero' : c.good < 3 ? 'low' : ''}`} style={{ width: `${Math.max(4, (Math.min(c.good, maxGood) / maxGood) * 100)}%` }} />
+                  <span
+                    className={`cov-fill ${c.good === 0 ? 'zero' : c.good < 3 ? 'low' : ''}`}
+                    style={{ width: `${Math.max(4, (Math.min(c.good, maxGood) / maxGood) * 100)}%` }}
+                  />
                 </span>
-                <span className="cov-num">{c.good === 0 ? 'none' : `${c.good} good combo${c.good === 1 ? '' : 's'}`}</span>
+                <span className="cov-num">{c.good === 0 ? t('shop.cov.none') : c.good === 1 ? t('shop.cov.1') : t('shop.cov.n', { n: c.good })}</span>
               </div>
             ))}
           </div>
 
-          <h2 className="section-title">What to buy next</h2>
+          <h2 className="section-title">{t('shop.buy')}</h2>
           {result.cov.every((c) => c.good >= 3) && result.suggestions.length > 0 && (
             <p className="tip" style={{ marginBottom: 10 }}>
-              Your closet already covers every occasion. These pieces add the most new combinations.
+              {t('shop.allCovered')}
             </p>
           )}
           {result.suggestions.length === 0 ? (
             <div className="empty">
-              <p>Nothing stands out. Your closet covers the staples.</p>
+              <p>{t('shop.nothing')}</p>
             </div>
           ) : (
             <div className="shop-list">
@@ -102,7 +107,7 @@ export function ShopView({ items, season, wardrobeKind, onWardrobeKind, onAddToC
                   <div className="shop-body">
                     <h3>
                       {s.label}
-                      <span className={`tag ${s.kind}`}>{s.kind === 'gap' ? 'fills a gap' : s.kind === 'accessory' ? 'finishing touch' : 'more variety'}</span>
+                      <span className={`tag ${s.kind}`}>{t(`shop.tag.${s.kind}`)}</span>
                     </h3>
                     <p className="why">{s.why}</p>
                     <ul className="reasons">
@@ -114,14 +119,14 @@ export function ShopView({ items, season, wardrobeKind, onWardrobeKind, onAddToC
                       <div className="chips tiny">
                         {s.unlocks.slice(0, 6).map((u) => (
                           <span key={u.occasion.id} className={`chip static ${u.fromZero ? 'highlight' : ''}`}>
-                            {u.occasion.emoji} {u.occasion.label} · {u.count}
+                            {u.occasion.emoji} {occasionLabel(u.occasion)} · {u.count}
                           </span>
                         ))}
                       </div>
                     )}
                     {s.example && (
                       <details>
-                        <summary>Example outfit it unlocks</summary>
+                        <summary>{t('shop.example')}</summary>
                         <OutfitCard outfit={s.example} compact />
                         <p className="outfit-list">{s.example.items.map((i) => itemTitle(i)).join(' · ')}</p>
                       </details>
@@ -135,7 +140,7 @@ export function ShopView({ items, season, wardrobeKind, onWardrobeKind, onAddToC
                           setAdded((a) => new Set(a).add(s.id))
                         }}
                       >
-                        {added.has(s.id) ? 'Added to closet' : 'I bought it: add to closet'}
+                        {added.has(s.id) ? t('shop.added') : t('shop.bought')}
                       </button>
                     </div>
                   </div>

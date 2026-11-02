@@ -2,6 +2,9 @@ import type { ClothingItem, Outfit, Season } from '../types'
 import type { Occasion } from '../data/occasions'
 import { SUBTYPE_MAP } from '../data/subtypes'
 import { colorBucket, describe, isChromatic, pairScore } from './color'
+import { itemTitle } from './items'
+import { t } from '../i18n'
+import { lowerFirst, occasionLabel } from '../labels'
 
 export interface GenerateOptions {
   season: Season
@@ -15,8 +18,11 @@ export interface GenerateOptions {
 export const GOOD_SCORE = 68
 
 function fmtItem(i: ClothingItem): string {
-  const label = SUBTYPE_MAP[i.subtype]?.label ?? i.subtype
-  return `${i.colorName.toLowerCase()} ${label.toLowerCase()}`
+  return lowerFirst(itemTitle(i))
+}
+
+function occ_(occ: Occasion): string {
+  return occasionLabel(occ).toLowerCase()
 }
 
 function seasonAllows(item: ClothingItem, season: Season): boolean {
@@ -53,14 +59,14 @@ function scoreCore(core: ClothingItem[], shoes: ClothingItem | null, occ: Occasi
   } else {
     const dist = avg < min ? min - avg : avg - max
     score -= Math.round(14 * dist)
-    warnings.push(avg < min ? `A bit too casual for ${occ.label.toLowerCase()}` : `Overdressed for ${occ.label.toLowerCase()}`)
+    warnings.push(avg < min ? t('n.formalityCasual', { occasion: occ_(occ) }) : t('n.formalityOver', { occasion: occ_(occ) }))
   }
   const spread = Math.max(...fs) - Math.min(...fs)
   if (spread >= 3) {
     const hi = all.find((i) => i.formality === Math.max(...fs))!
     const lo = all.find((i) => i.formality === Math.min(...fs))!
     score -= 10
-    warnings.push(`${fmtItem(hi)} and ${fmtItem(lo)} sit at very different formality levels`)
+    warnings.push(t('n.formalitySpread', { a: capitalise(fmtItem(hi)), b: fmtItem(lo) }))
   } else if (spread === 2) {
     score -= 3
   }
@@ -69,8 +75,8 @@ function scoreCore(core: ClothingItem[], shoes: ClothingItem | null, occ: Occasi
   const matching = all.filter((i) => i.styles.some((s) => occ.styles.includes(s))).length
   const frac = matching / all.length
   score += Math.round(10 * frac)
-  if (frac === 1) notes.push(`Every piece suits a ${occ.label.toLowerCase()} look`)
-  else if (frac < 0.5) warnings.push('Most pieces lean a different style than the occasion')
+  if (frac === 1) notes.push(t('n.styleAll', { occasion: occ_(occ) }))
+  else if (frac < 0.5) warnings.push(t('n.styleFew'))
 
   // --- Colour harmony ---
   const pairs: [ClothingItem, ClothingItem][] = []
@@ -90,7 +96,7 @@ function scoreCore(core: ClothingItem[], shoes: ClothingItem | null, occ: Occasi
     }
     if (r.warning && !seenNotes.has(r.warning)) {
       seenNotes.add(r.warning)
-      warnings.push(`${capitalise(fmtItem(a))} + ${fmtItem(b)}: ${r.warning.toLowerCase()}`)
+      warnings.push(t('n.pair', { a: capitalise(fmtItem(a)), b: fmtItem(b), note: r.warning }))
     }
   }
   if (pairs.length) score += Math.round((total / pairs.length) * 12)
@@ -99,15 +105,15 @@ function scoreCore(core: ClothingItem[], shoes: ClothingItem | null, occ: Occasi
   const chromatic = new Set(all.filter((i) => isChromatic(describe(i.colorHex))).map((i) => colorBucket(describe(i.colorHex))))
   if (chromatic.size > 2) {
     score -= chromatic.size > 3 ? 16 : 8
-    warnings.push('Too many colours: keep it to two plus neutrals')
+    warnings.push(t('n.tooMany'))
   } else if (chromatic.size === 0) {
-    notes.push('All neutrals: clean and safe')
+    notes.push(t('n.allNeutral'))
     if (occ.mood === 'bright') {
       score -= 4
-      warnings.push('A pop of colour would lift this')
+      warnings.push(t('n.popColour'))
     }
   } else if (chromatic.size === 1) {
-    notes.push('One colour, the rest neutral: easy to pull off')
+    notes.push(t('n.oneColour'))
   }
   if (buckets.size > 4) score -= 5
 
@@ -117,20 +123,20 @@ function scoreCore(core: ClothingItem[], shoes: ClothingItem | null, occ: Occasi
   if (occ.mood === 'dark') {
     const f = coreInfos.filter((c) => c.tone === 'dark').length / coreInfos.length
     score += Math.round(6 * f)
-    if (f >= 0.75) notes.push('Dark palette suits the evening')
+    if (f >= 0.75) notes.push(t('n.darkPalette'))
   } else if (occ.mood === 'light') {
     const f = coreInfos.filter((c) => c.tone === 'light').length / coreInfos.length
     score += Math.round(6 * f)
-    if (f >= 0.5) notes.push('Light palette fits the daytime mood')
+    if (f >= 0.5) notes.push(t('n.lightPalette'))
   } else if (occ.mood === 'bright') {
     if (infos.some((c) => c.saturated)) {
       score += 5
-      notes.push('Has a bold colour for the night')
+      notes.push(t('n.boldColour'))
     }
   } else if (occ.mood === 'muted') {
     if (coreInfos.some((c) => c.saturated && c.kind === 'color')) {
       score -= 6
-      warnings.push(`Loud colour for ${occ.label.toLowerCase()}`)
+      warnings.push(t('n.loudColour', { occasion: occ_(occ) }))
     } else {
       score += 3
     }
@@ -140,28 +146,28 @@ function scoreCore(core: ClothingItem[], shoes: ClothingItem | null, occ: Occasi
   const patterned = core.filter((i) => i.pattern !== 'solid' && i.pattern !== 'texture')
   if (patterned.length > 1) {
     score -= 7
-    warnings.push('Two patterns compete with each other')
+    warnings.push(t('n.twoPatterns'))
   } else if (patterned.length === 1) {
-    notes.push(`The ${fmtItem(patterned[0])} adds interest`)
+    notes.push(t('n.patternInterest', { item: fmtItem(patterned[0]) }))
   }
 
   // --- Top/bottom contrast ---
   const top = core.find((i) => i.category === 'top')
   const bottom = core.find((i) => i.category === 'bottom')
   if (top && bottom) {
-    const t = describe(top.colorHex)
-    const b = describe(bottom.colorHex)
-    if (isChromatic(t) && isChromatic(b) && Math.abs(t.l - b.l) < 0.08 && colorBucket(t) === colorBucket(b)) {
+    const ti = describe(top.colorHex)
+    const bi = describe(bottom.colorHex)
+    if (isChromatic(ti) && isChromatic(bi) && Math.abs(ti.l - bi.l) < 0.08 && colorBucket(ti) === colorBucket(bi)) {
       score -= 4
-      warnings.push('Top and bottom blend into each other')
+      warnings.push(t('n.blend'))
     }
-    if (t.tone === 'light' && b.tone === 'dark') notes.push('Light top over dark bottom: classic balance')
+    if (ti.tone === 'light' && bi.tone === 'dark') notes.push(t('n.lightOverDark'))
   }
 
   // --- Shoes ---
   if (!shoes) {
     score -= 12
-    warnings.push('No suitable shoes for this in your closet')
+    warnings.push(t('n.noShoes'))
   } else {
     const s = describe(shoes.colorHex)
     const anchor = bottom ?? core.find((i) => i.category === 'onepiece')
@@ -169,14 +175,14 @@ function scoreCore(core: ClothingItem[], shoes: ClothingItem | null, occ: Occasi
       const a = describe(anchor.colorHex)
       if (s.kind === 'earth' && a.kind === 'black' && shoes.formality >= 3) {
         score -= 6
-        warnings.push('Brown shoes with black trousers is a hard combination')
+        warnings.push(t('n.brownBlack'))
       }
-      if (s.kind === 'white' && shoes.subtype === 'sneakers') notes.push('White sneakers go with everything')
-      if (s.kind === 'earth' && a.kind === 'navy') notes.push('Brown shoes with navy: textbook')
+      if (s.kind === 'white' && shoes.subtype === 'sneakers') notes.push(t('n.whiteSneakers'))
+      if (s.kind === 'earth' && a.kind === 'navy') notes.push(t('n.brownNavy'))
     }
     if (occ.id === 'sport' && shoes.subtype !== 'running' && shoes.subtype !== 'sneakers') {
       score -= 15
-      warnings.push('Wrong shoes for sport')
+      warnings.push(t('n.wrongSportShoes'))
     }
   }
 
@@ -185,26 +191,26 @@ function scoreCore(core: ClothingItem[], shoes: ClothingItem | null, occ: Occasi
   if (season === 'winter') {
     if (!outer) {
       score -= 8
-      warnings.push('Add a layer: it is winter')
+      warnings.push(t('n.addLayer'))
     }
     if (top && top.warmth === 'light' && !outer) {
       score -= 6
     }
-    if (outer && outer.warmth === 'warm') notes.push('Warm enough for winter')
+    if (outer && outer.warmth === 'warm') notes.push(t('n.warmEnough'))
   } else if (season === 'autumn' || season === 'spring') {
     if (!outer && occ.outer === 'encouraged') score -= 4
     if (season === 'autumn' && all.some((i) => i.warmth === 'light' && (i.category === 'bottom' || i.category === 'shoes'))) {
       score -= 8
-      warnings.push('Shorts or open shoes are a bit cool for autumn')
+      warnings.push(t('n.autumnLight'))
     }
     if (outer && outer.warmth === 'warm' && season === 'spring') score -= 3
   } else if (season === 'summer') {
     if (outer && occ.outer !== 'encouraged') score -= 4
-    if (top && top.warmth === 'light') notes.push('Light fabric for the heat')
+    if (top && top.warmth === 'light') notes.push(t('n.lightFabric'))
   }
   if (outer && occ.outer === 'encouraged') {
     score += 5
-    notes.push(`The ${fmtItem(outer)} finishes the look`)
+    notes.push(t('n.outerFinishes', { item: fmtItem(outer) }))
   }
   if (outer && occ.outer === 'none') score -= 10
 
@@ -213,7 +219,7 @@ function scoreCore(core: ClothingItem[], shoes: ClothingItem | null, occ: Occasi
     const white = core.find((i) => describe(i.colorHex).kind === 'white' && (i.category === 'onepiece' || i.category === 'bottom'))
     if (white) {
       score -= 20
-      warnings.push('Avoid white as a wedding guest')
+      warnings.push(t('n.whiteWedding'))
     }
   }
   if (occ.id === 'meeting' || occ.id === 'work') {
@@ -223,7 +229,7 @@ function scoreCore(core: ClothingItem[], shoes: ClothingItem | null, occ: Occasi
     })
     if (navyOrCharcoal) {
       score += 3
-      notes.push('Navy/charcoal reads as professional')
+      notes.push(t('n.professional'))
     }
   }
 
@@ -251,7 +257,7 @@ function scoreAccessory(acc: ClothingItem, core: ClothingItem[], shoes: Clothing
     const match = si.kind === ai.kind || (si.neutral && ai.neutral && si.kind !== 'white' && ai.kind !== 'white')
     if (match) {
       score += 5
-      note = 'Belt matches the shoes'
+      note = t('n.beltMatches')
     } else {
       return null
     }
@@ -261,7 +267,7 @@ function scoreAccessory(acc: ClothingItem, core: ClothingItem[], shoes: Clothing
     const r = pairScore(ai, describe(shirt.colorHex))
     if (r.score < 0.3) return null
     score += 4 + r.score
-    note = 'Tie completes the formal look'
+    note = t('n.tieCompletes')
   } else if (acc.subtype === 'watch') {
     score += 2
   } else if (acc.subtype === 'scarf' || acc.subtype === 'beanie') {

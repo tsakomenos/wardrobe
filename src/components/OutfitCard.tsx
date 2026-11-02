@@ -1,6 +1,6 @@
 import type { Outfit } from '../types'
-import { SUBTYPE_MAP } from '../data/subtypes'
 import { itemTitle } from '../engine/items'
+import { subtypeLabel } from '../labels'
 import { Swatch } from './Swatch'
 
 interface Props {
@@ -25,20 +25,18 @@ export function OutfitCard({ outfit, compact = false }: Props) {
           {core.map((i) => (
             <div key={i.id} className="piece" title={itemTitle(i)}>
               <Swatch hex={i.colorHex} pattern={i.pattern} size={compact ? 34 : 48} />
-              <span className="piece-label">{SUBTYPE_MAP[i.subtype]?.label ?? i.subtype}</span>
+              <span className="piece-label">{subtypeLabel(i.subtype)}</span>
             </div>
           ))}
           {acc.length > 0 && <span className="plus">+</span>}
           {acc.map((i) => (
             <div key={i.id} className="piece small" title={itemTitle(i)}>
               <Swatch hex={i.colorHex} pattern={i.pattern} size={compact ? 22 : 28} />
-              <span className="piece-label">{SUBTYPE_MAP[i.subtype]?.label ?? i.subtype}</span>
+              <span className="piece-label">{subtypeLabel(i.subtype)}</span>
             </div>
           ))}
         </div>
-        <span className={`score ${scoreClass(outfit.score)}`} title="Match score">
-          {outfit.score}
-        </span>
+        <span className={`score ${scoreClass(outfit.score)}`}>{outfit.score}</span>
       </header>
       {!compact && (
         <div className="outfit-text">

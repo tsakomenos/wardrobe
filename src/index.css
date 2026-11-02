@@ -986,3 +986,28 @@ input[type='color'] {
     padding: 8px 6px;
   }
 }
+
+/* ---------- Language toggle ---------- */
+.head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn.lang {
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+}
+
+@media (max-width: 640px) {
+  .head-right {
+    width: 100%;
+  }
+
+  .tabs {
+    flex: 1;
+  }
+}
